@@ -18,9 +18,11 @@ echo "eula=true" > eula.txt
 printf 'online-mode=false\nlevel-type=minecraft:flat\nspawn-protection=0\n' > server.properties
 
 mkfifo console
-tail -f console | java -Xmx2G -jar paper.jar --nogui > out.log 2>&1 &
+# The server reads its console from the FIFO; fd 3 keeps the write end open.
+java -Xmx2G -jar paper.jar --nogui < console > out.log 2>&1 &
 SERVER_PID=$!
 exec 3>console
+trap 'exec 3>&-; kill "$SERVER_PID" 2>/dev/null || true' EXIT
 
 for i in $(seq 1 240); do
   if grep -q "Done (" out.log; then break; fi
@@ -34,7 +36,11 @@ for cmd in "smpcore version" "plugins" "inspector lookup r:#global t:1h" "antich
   sleep 2
 done
 echo "stop" >&3
-wait "$SERVER_PID" || true
+for i in $(seq 1 60); do
+  kill -0 "$SERVER_PID" 2>/dev/null || break
+  sleep 1
+done
+kill "$SERVER_PID" 2>/dev/null || true
 
 cat out.log
 if ! grep -q "SmpCore enabled" out.log; then
