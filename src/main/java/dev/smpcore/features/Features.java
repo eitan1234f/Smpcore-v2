@@ -43,6 +43,7 @@ public final class Features {
         rituals = register(new RitualFeature(plugin));
         register(new SecurityFeature(plugin));
         npcs = register(new NpcService(plugin));
+        register(new dev.smpcore.ui.ChestGui.Events());
         new ShieldFeature(plugin);
         kits = new KitService(plugin);
         arenas = new ArenaService(plugin);
