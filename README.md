@@ -27,6 +27,8 @@ Everything you need to run an SMP in one Paper plugin for **Minecraft 1.21.11**,
 | Bans & limits | Ban mace / one-time mace craft, crystal/anchor/bed/TNT/TNT-minecart bans, lava near players, tipped arrows, nether/end bans, netherite pieces, item ban, enchant ban/caps, potion-effect ban, server-wide craft limits, per-player carry limits, mob disabler, block placing/breaking switches, elytra ban, inventory purge |
 | World | One-player sleep, locator bar, fire spread, no falling blocks, render/simulation distance, Paper anti-xray modes 1/2/3, anti seed cracking, tree feller, veinminer, sit on stairs/slabs, apple drop boost, block decay, armor-stand arms, happy-ghast speed, glowing dropped items, instant brewing, book size limit, tick rate |
 | Villagers & vaults | Infinite restock, trade cycling, disable trades (e.g. mending), disable vaults, reopenable vaults, heavy-core drop control |
+| Custom recipes | In-game editor (`/customrecipe create <id> <type>`) for shaped/shapeless crafting, furnace, blast furnace, smoker, campfire, stonecutter, **brewing** and **anvil** recipes, listed in `/recipes` |
+| Custom terrain | Install world generation datapacks (Terralith, Tectonic...) from Modrinth with the installer's **Custom Terrain** tab |
 | Items | Stackable potions, easy recipes, vanilla recipe remover, unbreakable anvils, "too expensive" fix, rituals (public countdown when crafting a mace, etc.) |
 | Chat | No chat reports, chat formats, word filter, spam limiter, mutes, anti-minimap |
 | Security | Maintenance mode (+ MOTD), anti-VPN, anti-alt (max accounts per IP), mod detector, command ban |
@@ -55,6 +57,7 @@ Everything you need to run an SMP in one Paper plugin for **Minecraft 1.21.11**,
 | `/npc ...` | NPCs with real skins (vanilla Mannequin entity) and click actions |
 | `/arenarepair pos1\|pos2\|create\|repair\|auto` | Save and auto-repair arenas, no FAWE needed |
 | `/nick`, `/skin`, `/setticksrate` | Cosmetics and tick rate |
+| `/customrecipe create\|edit\|delete\|list` | Custom recipe editor |
 
 ## Permissions
 
