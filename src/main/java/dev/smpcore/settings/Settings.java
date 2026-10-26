@@ -224,7 +224,7 @@ public final class Settings {
     public static final BoolSetting MACE_ONE_CRAFT = bool("bans.mace-one-time-craft", BANS, Material.HEAVY_CORE,
             "Mace: One Time Craft", "Only one mace can ever be crafted on the server", false);
     public static final BoolSetting BAN_CRYSTALS = bool("bans.explosives.end-crystal", BANS, Material.END_CRYSTAL,
-            "Ban Crystal PvP", "End crystals can't damage players (they still work for the dragon)", false);
+            "Ban Crystal PvP", "End crystals can't hurt players or be placed outside the End (the dragon fight still works)", false);
     public static final BoolSetting BAN_ANCHORS = bool("bans.explosives.respawn-anchor", BANS, Material.RESPAWN_ANCHOR,
             "Ban Anchor Explosions", "Respawn anchors can't explode outside the nether", false);
     public static final BoolSetting BAN_BEDS = bool("bans.explosives.bed", BANS, Material.RED_BED,

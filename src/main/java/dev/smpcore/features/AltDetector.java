@@ -66,6 +66,15 @@ public final class AltDetector implements Listener {
         return out;
     }
 
+    /** Alts including the IP that is connecting right now (not recorded yet). */
+    private synchronized Set<UUID> altsOf(UUID uuid, String currentIp) {
+        Set<UUID> out = alts(uuid);
+        for (String id : store().yaml().getStringList("ips." + ipKey(currentIp))) {
+            if (!id.equals(uuid.toString())) out.add(UUID.fromString(id));
+        }
+        return out;
+    }
+
     public String name(UUID uuid) {
         String n = store().yaml().getString("players." + uuid + ".name");
         if (n != null) return n;
@@ -81,11 +90,14 @@ public final class AltDetector implements Listener {
     public void onPreLogin(AsyncPlayerPreLoginEvent e) {
         if (e.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
         String ip = e.getAddress().getHostAddress();
-        record(e.getUniqueId(), e.getName(), ip);
+        UUID uuid = e.getUniqueId();
+        String name = e.getName();
+        // write on the main thread so the autosave never sees a half-written file
+        Bukkit.getScheduler().runTask(plugin, () -> record(uuid, name, ip));
         if (!Settings.AC_BLOCK_BANNED_ALTS.on()) return;
         OfflinePlayer self = Bukkit.getOfflinePlayer(e.getUniqueId());
         if (self.isOp()) return;
-        for (UUID alt : alts(e.getUniqueId())) {
+        for (UUID alt : altsOf(e.getUniqueId(), ip)) {
             OfflinePlayer op = Bukkit.getOfflinePlayer(alt);
             if (op.isBanned()) {
                 e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED,

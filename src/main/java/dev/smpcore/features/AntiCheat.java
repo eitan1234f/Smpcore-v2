@@ -65,6 +65,7 @@ public final class AntiCheat implements Listener {
         final Deque<Long> hitTimes = new ArrayDeque<>();
         final Deque<UUID> hitTargets = new ArrayDeque<>();
         long lastAlert;
+        long lastDig;
     }
 
     public AntiCheat(SmpCore plugin) {
@@ -173,6 +174,27 @@ public final class AntiCheat implements Listener {
         exemptFor(e.getPlayer(), 3000);
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onKnockback(io.papermc.paper.event.entity.EntityKnockbackEvent e) {
+        if (e.getEntity() instanceof Player p) exemptFor(p, 1500);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onDig(org.bukkit.event.block.BlockDamageEvent e) {
+        data(e.getPlayer()).lastDig = System.currentTimeMillis();
+    }
+
+    /** Standing on a happy ghast, boat, shulker or minecart counts as ground. */
+    private static boolean onEntity(Player p) {
+        for (Entity en : p.getNearbyEntities(1.5, 2.5, 1.5)) {
+            if (en instanceof org.bukkit.entity.HappyGhast || en instanceof org.bukkit.entity.Boat || en instanceof org.bukkit.entity.Shulker
+                    || en instanceof org.bukkit.entity.Minecart) {
+                if (en.getLocation().getY() <= p.getLocation().getY() + 0.1) return true;
+            }
+        }
+        return false;
+    }
+
     // ------------------------------------------------------------------ movement
 
     private static boolean nearGround(Location loc) {
@@ -213,9 +235,19 @@ public final class AntiCheat implements Listener {
         Location from = e.getFrom();
         Location to = e.getTo();
         boolean ground = nearGround(to);
+        if (!ground && onEntity(p)) {
+            d.airTicks = 0;
+            d.speedBuffer = 0;
+            d.lastGround = to.clone();
+            return;
+        }
+        if (ground && to.clone().add(0, -0.6, 0).getBlock().getType() == Material.SLIME_BLOCK) {
+            exemptFor(p, 3000);
+        }
+        boolean inLiquid = to.getBlock().isLiquid() || from.getBlock().isLiquid();
 
         // speed
-        if (Settings.AC_SPEED.on()) {
+        if (Settings.AC_SPEED.on() && !inLiquid) {
             double dx = to.getX() - from.getX();
             double dz = to.getZ() - from.getZ();
             double horizontal = Math.sqrt(dx * dx + dz * dz);
@@ -278,7 +310,8 @@ public final class AntiCheat implements Listener {
             double cz = Math.max(box.getMinZ(), Math.min(eye.getZ(), box.getMaxZ()));
             double dist = eye.toVector().distance(new Vector(cx, cy, cz));
             AttributeInstance range = p.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
-            double max = (range == null ? 3.0 : range.getValue()) + 0.45 + (target.getVelocity().length() * 2);
+            double max = (range == null ? 3.0 : range.getValue()) + 0.45 + (target.getVelocity().length() * 2)
+                    + Math.min(1.0, p.getPing() / 500.0);
             if (dist > max) {
                 if (flag(p, "Reach", 1.5, String.format("%.2f > %.2f", dist, max))) {
                     e.setCancelled(true);
@@ -291,7 +324,7 @@ public final class AntiCheat implements Listener {
             Vector toTarget = box.getCenter().subtract(eye.toVector());
             double angle = Math.toDegrees(eye.getDirection().angle(toTarget));
             double size = Math.toDegrees(Math.atan2(Math.max(box.getWidthX(), box.getHeight()) / 2, Math.max(0.5, toTarget.length())));
-            if (angle - size > 50) {
+            if (angle - size > 75) {
                 if (flag(p, "KillAura", 2, String.format("angle %.0f°", angle))) {
                     e.setCancelled(true);
                     return;
@@ -319,6 +352,8 @@ public final class AntiCheat implements Listener {
         if (!Settings.AC_AUTOCLICKER.on() || e.getHand() != EquipmentSlot.HAND || exempt(p)) return;
         Data d = data(p);
         long now = System.currentTimeMillis();
+        // holding attack on a block sends a swing every tick while mining - not clicks
+        if (now - d.lastDig < 1000 || p.getTargetBlockExact(5) != null) return;
         d.clicks.addLast(now);
         while (!d.clicks.isEmpty() && now - d.clicks.peekFirst() > 1000) d.clicks.pollFirst();
         int cps = d.clicks.size();

@@ -216,13 +216,13 @@ public final class SettingsMenu {
         if (s instanceof ListSetting l) {
             return DialogInput.text(key, Msg.mm(label + " <dark_gray>(comma separated)"))
                     .initial(l.joined())
-                    .maxLength(4000)
+                    .maxLength(Math.max(4000, l.joined().length()))
                     .width(Dialogs.WIDE)
                     .multiline(TextDialogInput.MultilineOptions.create(6, 48))
                     .build();
         }
         TextSetting t = (TextSetting) s;
-        return DialogInput.text(key, Msg.mm(label)).initial(t.get()).maxLength(Math.max(1, t.maxLength())).width(Dialogs.WIDE).build();
+        return DialogInput.text(key, Msg.mm(label)).initial(t.get()).maxLength(Math.max(Math.max(1, t.maxLength()), t.get().length())).width(Dialogs.WIDE).build();
     }
 
     /** Reads every input on the page and applies changed values. Returns the number of changes. */

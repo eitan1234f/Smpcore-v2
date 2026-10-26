@@ -97,6 +97,11 @@ public final class Dialogs {
     public static Dialog menu(String title, List<? extends DialogBody> body, List<? extends DialogInput> inputs,
                               List<ActionButton> buttons, ActionButton exit, int columns) {
         DialogBase base = base(title, body, inputs);
+        if (buttons.isEmpty()) {
+            // multi_action dialogs need at least one button; fall back to a notice
+            ActionButton only = exit != null ? exit : close("<gray>Close");
+            return Dialog.create(f -> f.empty().base(base).type(DialogType.notice(only)));
+        }
         DialogType type = DialogType.multiAction(buttons).exitAction(exit).columns(Math.max(1, columns)).build();
         return Dialog.create(f -> f.empty().base(base).type(type));
     }

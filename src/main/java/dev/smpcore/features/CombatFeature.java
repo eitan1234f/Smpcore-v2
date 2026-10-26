@@ -133,7 +133,9 @@ public final class CombatFeature implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
-        if (isTagged(p) && Settings.COMBAT_LOG_KILL.on() && !p.hasPermission("smpcore.bypass")) {
+        boolean disconnected = e.getReason() == PlayerQuitEvent.QuitReason.DISCONNECTED
+                || e.getReason() == PlayerQuitEvent.QuitReason.TIMED_OUT;
+        if (disconnected && isTagged(p) && Settings.COMBAT_LOG_KILL.on() && !p.hasPermission("smpcore.bypass")) {
             p.setHealth(0);
             Bukkit.broadcast(Msg.prefixed("<red>" + Msg.escape(p.getName()) + " logged out during combat and died!"));
         }

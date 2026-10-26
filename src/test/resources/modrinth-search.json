@@ -1,0 +1,40 @@
+{
+  "hits": [
+    {
+      "project_id": "AANobbMI",
+      "project_type": "mod",
+      "slug": "example",
+      "author": "someone",
+      "title": "Sodium-but-a-plugin",
+      "description": "An example plugin",
+      "categories": ["paper", "spigot", "utility"],
+      "display_categories": ["utility"],
+      "versions": ["1.21.10", "1.21.11"],
+      "downloads": 1500000,
+      "follows": 4200,
+      "icon_url": "https://cdn.modrinth.com/data/AANobbMI/icon.png",
+      "date_created": "2024-01-01T00:00:00Z",
+      "date_modified": "2026-10-01T00:00:00Z",
+      "latest_version": "2.0.0",
+      "license": "MIT",
+      "client_side": "unsupported",
+      "server_side": "required",
+      "gallery": []
+    },
+    {
+      "project_id": "P7dR8mSH",
+      "slug": "second",
+      "author": "other",
+      "title": "Second",
+      "description": "Another",
+      "categories": ["bukkit", "economy"],
+      "downloads": 10,
+      "follows": 1,
+      "icon_url": null,
+      "date_modified": "2026-09-01T00:00:00Z"
+    }
+  ],
+  "offset": 0,
+  "limit": 10,
+  "total_hits": 1234
+}

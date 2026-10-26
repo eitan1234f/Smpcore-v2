@@ -117,7 +117,11 @@ public final class ModrinthClient {
                 + "&facets=" + enc(facets.toString())
                 + "&index=" + enc(sort == null ? "relevance" : sort)
                 + "&offset=" + offset + "&limit=" + limit;
-        return get(url).thenApply(json -> {
+        return get(url).thenApply(ModrinthClient::parseSearch);
+    }
+
+    static SearchResult parseSearch(JsonElement json) {
+        {
             JsonObject o = json.getAsJsonObject();
             List<Hit> hits = new ArrayList<>();
             for (JsonElement e : o.getAsJsonArray("hits")) {
@@ -127,7 +131,7 @@ public final class ModrinthClient {
                         str(h, "date_modified"), str(h, "icon_url")));
             }
             return new SearchResult(hits, (int) num(o, "total_hits"), (int) num(o, "offset"), (int) num(o, "limit"));
-        });
+        }
     }
 
     public CompletableFuture<Project> project(String idOrSlug) {
@@ -163,7 +167,7 @@ public final class ModrinthClient {
         return get(API + "/version/" + enc(versionId)).thenApply(json -> parseVersion(json.getAsJsonObject()));
     }
 
-    private static Version parseVersion(JsonObject v) {
+    static Version parseVersion(JsonObject v) {
         List<FileInfo> files = new ArrayList<>();
         for (JsonElement f : v.getAsJsonArray("files")) {
             JsonObject fo = f.getAsJsonObject();

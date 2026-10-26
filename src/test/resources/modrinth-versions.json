@@ -1,0 +1,36 @@
+[
+  {
+    "id": "BETA0001",
+    "project_id": "AANobbMI",
+    "name": "2.1.0 beta",
+    "version_number": "2.1.0-beta",
+    "version_type": "beta",
+    "date_published": "2026-10-10T00:00:00Z",
+    "loaders": ["paper"],
+    "game_versions": ["1.21.11"],
+    "dependencies": [],
+    "files": [
+      {"url": "https://cdn.modrinth.com/data/AANobbMI/versions/BETA0001/plugin-2.1.0-beta.jar", "filename": "plugin-2.1.0-beta.jar",
+       "primary": true, "size": 1000, "hashes": {"sha1": "aa", "sha512": "bb"}}
+    ]
+  },
+  {
+    "id": "REL00001",
+    "project_id": "AANobbMI",
+    "name": "2.0.0",
+    "version_number": "2.0.0",
+    "version_type": "release",
+    "date_published": "2026-09-10T00:00:00Z",
+    "loaders": ["paper", "spigot"],
+    "game_versions": ["1.21.10", "1.21.11"],
+    "dependencies": [
+      {"version_id": null, "project_id": "DEPPROJ1", "file_name": null, "dependency_type": "required"}
+    ],
+    "files": [
+      {"url": "https://cdn.modrinth.com/x/sources.jar", "filename": "plugin-2.0.0-sources.jar", "primary": false, "size": 10,
+       "hashes": {"sha1": "cc", "sha512": "dd"}},
+      {"url": "https://cdn.modrinth.com/x/plugin-2.0.0.jar", "filename": "plugin-2.0.0.jar", "primary": true, "size": 2000,
+       "hashes": {"sha1": "ee", "sha512": "ff00ff"}}
+    ]
+  }
+]
