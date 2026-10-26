@@ -63,6 +63,7 @@ public final class UtilityCommands {
         m.add(new Npc(plugin));
         m.add(new ArenaRepair(plugin));
         m.add(new Admin(plugin));
+        m.add(new CustomRecipe(plugin));
     }
 
     // ------------------------------------------------------------------ /settings
@@ -299,6 +300,12 @@ public final class UtilityCommands {
                 body.add(Dialogs.item(r.getResult(), "<white><b>" + Msg.pretty(r.getResult().getType().name()) + "</b> x" + r.getResult().getAmount()
                         + "<newline><gray>" + describe(r)));
             }
+            var custom = plugin.features().recipes();
+            List<String> special = custom.ids().stream().filter(id -> custom.type(id).equals("brewing") || custom.type(id).equals("anvil"))
+                    .map(id -> id + " (" + custom.type(id) + ")").toList();
+            if (!special.isEmpty()) {
+                body.add(Dialogs.text("<light_purple>Brewing & anvil recipes:</light_purple> <gray>" + Msg.escape(String.join(", ", special))));
+            }
             if (!Settings.REMOVED_RECIPES.get().isEmpty()) {
                 body.add(Dialogs.text("<red>Removed vanilla recipes:</red> <gray>" + Msg.escape(Settings.REMOVED_RECIPES.joined())));
             }
@@ -325,6 +332,15 @@ public final class UtilityCommands {
                 List<String> parts = new ArrayList<>();
                 s.getChoiceList().forEach(c -> parts.add(shortName(c.getItemStack())));
                 return "Shapeless: " + String.join(" + ", parts);
+            }
+            if (r instanceof org.bukkit.inventory.CookingRecipe<?> c) {
+                String station = r instanceof org.bukkit.inventory.BlastingRecipe ? "Blast furnace"
+                        : r instanceof org.bukkit.inventory.SmokingRecipe ? "Smoker"
+                        : r instanceof org.bukkit.inventory.CampfireRecipe ? "Campfire" : "Furnace";
+                return station + ": " + shortName(c.getInputChoice().getItemStack()) + " (" + c.getCookingTime() / 20 + "s)";
+            }
+            if (r instanceof org.bukkit.inventory.StonecuttingRecipe s) {
+                return "Stonecutter: " + shortName(s.getInputChoice().getItemStack());
             }
             return "";
         }
@@ -711,6 +727,49 @@ public final class UtilityCommands {
             if (args.length == 1) return List.of("pos1", "pos2", "create", "repair", "auto", "remove", "list");
             if (args.length == 2 && !args[0].equalsIgnoreCase("create")) return plugin.features().arenas().names();
             if (args.length == 3 && args[0].equalsIgnoreCase("auto")) return List.of("30s", "5m", "2h", "off");
+            return List.of();
+        }
+    }
+
+    // ------------------------------------------------------------------ /customrecipe
+
+    static final class CustomRecipe extends SmpCommand {
+        CustomRecipe(SmpCore plugin) {
+            super(plugin, "customrecipe", Material.CRAFTING_TABLE, "Create custom crafting, smelting, brewing, stonecutter and anvil recipes",
+                    "/<command> <create|edit|delete|list> [id] [type]", ADMIN_PERM, "crecipe");
+        }
+
+        @Override
+        protected void run(CommandSender sender, String label, String[] args) {
+            var recipes = plugin.features().recipes();
+            String sub = args.length > 0 ? args[0].toLowerCase() : "list";
+            switch (sub) {
+                case "create", "edit" -> {
+                    Player p = requirePlayer(sender);
+                    if (p == null) return;
+                    if (args.length < 2) { usage(sender); return; }
+                    String id = args[1].toLowerCase().replaceAll("[^a-z0-9_]", "");
+                    String type = args.length > 2 ? args[2] : sub.equals("edit") ? recipes.type(id) : "shaped";
+                    recipes.openEditor(p, id, type);
+                }
+                case "delete", "remove" -> {
+                    if (args.length < 2) { usage(sender); return; }
+                    if (recipes.delete(args[1].toLowerCase())) Msg.ok(sender, "Recipe deleted."); else Msg.error(sender, "No such recipe.");
+                }
+                default -> {
+                    List<String> ids = recipes.ids();
+                    Msg.send(sender, "<gray>Custom recipes: <white>" + (ids.isEmpty() ? "none" : String.join(", ",
+                            ids.stream().map(i -> i + " (" + recipes.type(i) + ")").toList())));
+                    sender.sendMessage(Msg.mm("<dark_gray> Types: " + String.join(", ", dev.smpcore.features.CustomRecipes.TYPES)));
+                }
+            }
+        }
+
+        @Override
+        protected List<String> complete(CommandSender sender, String[] args) {
+            if (args.length == 1) return List.of("create", "edit", "delete", "list");
+            if (args.length == 2 && !args[0].equalsIgnoreCase("create")) return plugin.features().recipes().ids();
+            if (args.length == 3 && args[0].equalsIgnoreCase("create")) return dev.smpcore.features.CustomRecipes.TYPES;
             return List.of();
         }
     }

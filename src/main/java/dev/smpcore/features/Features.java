@@ -24,6 +24,7 @@ public final class Features {
     private WorldFeature world;
     private ItemsFeature items;
     private AntiCheat antiCheat;
+    private CustomRecipes recipes;
     private AltDetector alts;
     private dev.smpcore.inspector.Inspector inspector;
 
@@ -49,6 +50,7 @@ public final class Features {
         antiCheat = register(new AntiCheat(plugin));
         alts = register(new AltDetector(plugin));
         register(new CommandBanFeature());
+        recipes = register(new CustomRecipes(plugin));
         inspector = register(new dev.smpcore.inspector.Inspector(plugin));
         register(new dev.smpcore.ui.ChestGui.Events());
         new ShieldFeature(plugin);
@@ -85,6 +87,7 @@ public final class Features {
     public WorldFeature world() { return world; }
     public ItemsFeature items() { return items; }
     public AntiCheat antiCheat() { return antiCheat; }
+    public CustomRecipes recipes() { return recipes; }
     public AltDetector alts() { return alts; }
     public dev.smpcore.inspector.Inspector inspector() { return inspector; }
 }
