@@ -49,6 +49,8 @@ public final class SettingsMenu {
         STYLE.put(Category.ITEMS, "<#fcd34d>⚒ ");
         STYLE.put(Category.CHAT, "<#f0abfc>✎ ");
         STYLE.put(Category.SECURITY, "<#fdba74>⚠ ");
+        STYLE.put(Category.ANTICHEAT, "<#f97316>⛊ ");
+        STYLE.put(Category.INSPECTOR, "<#38bdf8>🔎 ");
         STYLE.put(Category.TELEPORT, "<#a5b4fc>➶ ");
         STYLE.put(Category.COMMANDS, "<#e2e8f0>⌘ ");
     }

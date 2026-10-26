@@ -23,6 +23,9 @@ public final class Features {
     private BansFeature bans;
     private WorldFeature world;
     private ItemsFeature items;
+    private AntiCheat antiCheat;
+    private AltDetector alts;
+    private dev.smpcore.inspector.Inspector inspector;
 
     public Features(SmpCore plugin) {
         this.plugin = plugin;
@@ -43,6 +46,10 @@ public final class Features {
         rituals = register(new RitualFeature(plugin));
         register(new SecurityFeature(plugin));
         npcs = register(new NpcService(plugin));
+        antiCheat = register(new AntiCheat(plugin));
+        alts = register(new AltDetector(plugin));
+        register(new CommandBanFeature());
+        inspector = register(new dev.smpcore.inspector.Inspector(plugin));
         register(new dev.smpcore.ui.ChestGui.Events());
         new ShieldFeature(plugin);
         kits = new KitService(plugin);
@@ -56,6 +63,7 @@ public final class Features {
 
     public void disable() {
         if (rituals != null) rituals.shutdown();
+        if (inspector != null) inspector.shutdown();
         if (players != null) {
             plugin.getServer().getOnlinePlayers().forEach(players::snapshot);
         }
@@ -76,4 +84,7 @@ public final class Features {
     public BansFeature bans() { return bans; }
     public WorldFeature world() { return world; }
     public ItemsFeature items() { return items; }
+    public AntiCheat antiCheat() { return antiCheat; }
+    public AltDetector alts() { return alts; }
+    public dev.smpcore.inspector.Inspector inspector() { return inspector; }
 }

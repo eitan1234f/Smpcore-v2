@@ -376,6 +376,51 @@ public final class Settings {
     public static final BoolSetting MAINTENANCE_MOTD = bool("security.maintenance-motd", SECURITY, Material.NAME_TAG,
             "Maintenance MOTD", "Show 'maintenance' in the server list while maintenance is on", true);
 
+    public static final ListSetting BLOCKED_COMMANDS = list("security.command-ban.commands", SECURITY, Material.COMMAND_BLOCK,
+            "Command Ban", "Commands players can't use or see in tab-complete (admins bypass)",
+            "pl", "plugins", "ver", "version", "about", "icanhasbukkit", "?", "me", "seed");
+    public static final TextSetting BLOCKED_COMMAND_MESSAGE = text("security.command-ban.message", SECURITY, Material.OAK_SIGN,
+            "Command Ban Message", "Shown when a player uses a banned command", "<red>You can't use that command.", 200);
+
+    // ================================================================== ANTI-CHEAT
+    public static final BoolSetting AC_ENABLED = bool("anticheat.enabled", ANTICHEAT, Material.SHIELD,
+            "Anti-Cheat", "Master switch for all anti-cheat checks", true);
+    public static final ChoiceSetting AC_ACTION = choice("anticheat.action", ANTICHEAT, Material.IRON_SWORD,
+            "Punishment", "alert = only notify staff, setback = also undo the cheat, kick = also kick at the limit",
+            "setback", "alert", "setback", "kick");
+    public static final NumberSetting AC_KICK_VL = num("anticheat.kick-violations", ANTICHEAT, Material.BARRIER,
+            "Kick At Violations", "Violation level that kicks a player (kick mode)", 30, 5, 200, 5, "VL");
+    public static final BoolSetting AC_FLY = bool("anticheat.checks.fly", ANTICHEAT, Material.FEATHER,
+            "Fly Check", "Detects hovering and flying without permission", true);
+    public static final BoolSetting AC_SPEED = bool("anticheat.checks.speed", ANTICHEAT, Material.SUGAR,
+            "Speed Check", "Detects moving faster than possible", true);
+    public static final BoolSetting AC_REACH = bool("anticheat.checks.reach", ANTICHEAT, Material.STICK,
+            "Reach Check", "Detects hitting from too far away", true);
+    public static final BoolSetting AC_KILLAURA = bool("anticheat.checks.killaura", ANTICHEAT, Material.DIAMOND_SWORD,
+            "KillAura Check", "Detects hitting entities you aren't looking at and multi-target aura", true);
+    public static final BoolSetting AC_AUTOCLICKER = bool("anticheat.checks.autoclicker", ANTICHEAT, Material.STONE_BUTTON,
+            "AutoClicker Check", "Detects inhuman clicks per second", true);
+    public static final NumberSetting AC_MAX_CPS = num("anticheat.max-cps", ANTICHEAT, Material.STONE_BUTTON,
+            "Max CPS", "Clicks per second before the autoclicker check flags", 20, 10, 40, 1, "cps");
+    public static final BoolSetting AC_FASTPLACE = bool("anticheat.checks.fastplace", ANTICHEAT, Material.SCAFFOLDING,
+            "FastPlace / Scaffold Check", "Detects placing blocks faster than humanly possible", true);
+    public static final BoolSetting AC_NUKER = bool("anticheat.checks.nuker", ANTICHEAT, Material.TNT,
+            "Nuker Check", "Detects breaking many blocks at once", true);
+    public static final BoolSetting AC_ALT_ALERTS = bool("anticheat.alts.alerts", ANTICHEAT, Material.PLAYER_HEAD,
+            "Alt Detector", "Alerts staff when a player joins from an IP used by other accounts", true);
+    public static final BoolSetting AC_BLOCK_BANNED_ALTS = bool("anticheat.alts.block-ban-evasion", ANTICHEAT, Material.IRON_DOOR,
+            "Block Ban Evasion", "Kick players who share an IP with a banned account", true);
+
+    // ================================================================== INSPECTOR
+    public static final BoolSetting INSPECTOR_ENABLED = bool("inspector.enabled", INSPECTOR, Material.SPYGLASS,
+            "Block Logging", "Log block breaks, places, explosions and fire for /inspect and rollbacks", true);
+    public static final BoolSetting INSPECTOR_CONTAINERS = bool("inspector.log-containers", INSPECTOR, Material.CHEST,
+            "Log Containers", "Log items taken from and put into chests, barrels, shulkers...", true);
+    public static final BoolSetting INSPECTOR_EXPLOSIONS = bool("inspector.log-explosions", INSPECTOR, Material.TNT,
+            "Log Explosions & Fire", "Log blocks destroyed by explosions and fire", true);
+    public static final NumberSetting INSPECTOR_RETENTION = num("inspector.retention-days", INSPECTOR, Material.CLOCK,
+            "Keep Logs For", "Days before old log entries are deleted", 30, 1, 365, 1, "days");
+
     // ================================================================== TELEPORT
     public static final NumberSetting TP_WARMUP = num("teleport.warmup", TELEPORT, Material.CLOCK,
             "Teleport Warmup", "Seconds standing still before teleporting (0 = instant)", 3, 0, 15, 1, "s");

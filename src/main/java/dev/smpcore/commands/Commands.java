@@ -13,5 +13,6 @@ public final class Commands {
         UtilityCommands.register(plugin, manager);
         TeleportCommands.register(plugin, manager);
         StaffCommands.register(plugin, manager);
+        ProtectionCommands.register(plugin, manager);
     }
 }

@@ -16,7 +16,9 @@ public enum Category {
     VILLAGERS("Villagers & Vaults", Material.EMERALD, "Restocks, trade cycling, vaults"),
     ITEMS("Items & Crafting", Material.CRAFTING_TABLE, "Stackable potions, recipes, rituals, craft limits"),
     CHAT("Chat", Material.WRITABLE_BOOK, "No chat reports, filter, spam limiter"),
-    SECURITY("Security", Material.IRON_BARS, "Maintenance, anti-VPN, anti-alt, mod detector"),
+    SECURITY("Security", Material.IRON_BARS, "Maintenance, anti-VPN, anti-alt, mod detector, command ban"),
+    ANTICHEAT("Anti-Cheat", Material.SHIELD, "Movement and combat checks, alt detector, staff alerts"),
+    INSPECTOR("Inspector", Material.SPYGLASS, "CoreProtect-style block and container logging with rollback"),
     TELEPORT("Teleport & Homes", Material.ENDER_PEARL, "RTP, TPA, homes, back, spawn"),
     COMMANDS("Commands", Material.COMMAND_BLOCK, "Turn any SmpCore command on or off");
 

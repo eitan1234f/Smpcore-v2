@@ -247,6 +247,10 @@ public final class WorldFeature implements Listener {
         });
     }
 
+    public boolean isChopping(Player p) {
+        return chopping.contains(p.getUniqueId());
+    }
+
     private static boolean isOre(Material m) {
         return m.name().endsWith("_ORE") || m == Material.ANCIENT_DEBRIS;
     }
