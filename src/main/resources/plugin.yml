@@ -1,0 +1,25 @@
+name: SmpCore
+version: '${project.version}'
+main: dev.smpcore.SmpCore
+api-version: '1.21.11'
+description: Everything you need to run an SMP - configured from native in-game menus.
+authors: [eitan1234f]
+website: https://github.com/eitan1234f/Smpcore-v2
+softdepend: [WorldEdit, FastAsyncWorldEdit, WorldGuard, voicechat]
+permissions:
+  smpcore.admin:
+    description: Full access to SmpCore settings and admin commands
+    default: op
+    children:
+      smpcore.settings.edit: true
+      smpcore.bypass: true
+      smpcore.staff: true
+  smpcore.settings.edit:
+    description: Change settings in /settings
+    default: op
+  smpcore.bypass:
+    description: Bypass feature restrictions (bans, limits, combat rules)
+    default: op
+  smpcore.staff:
+    description: Receive staff alerts and see vanished players
+    default: op
