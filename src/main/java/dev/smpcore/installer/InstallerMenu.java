@@ -45,8 +45,14 @@ public final class InstallerMenu {
     }
 
     /** Remembers each player's last search so paging keeps the filters. */
-    private record Query(String text, String sort, String category, boolean compatibleOnly) {
+    private record Query(String text, String sort, String category, boolean compatibleOnly, ModrinthClient.Kind kind) {
+        Query(String text, String sort, String category, boolean compatibleOnly) {
+            this(text, sort, category, compatibleOnly, ModrinthClient.Kind.PLUGIN);
+        }
     }
+
+    private static final ModrinthClient.Kind PLUGIN = ModrinthClient.Kind.PLUGIN;
+    private static final ModrinthClient.Kind DATAPACK = ModrinthClient.Kind.DATAPACK;
 
     private static final Map<java.util.UUID, Query> LAST = new java.util.HashMap<>();
 
@@ -99,6 +105,12 @@ public final class InstallerMenu {
             LAST.put(p.getUniqueId(), q);
             runSearch(p, q, 0);
         }));
+        buttons.add(Dialogs.button("<#86efac>🌄 Custom Terrain", "<gray>World generation datapacks (Terralith, Tectonic...)<newline>"
+                + "<dark_gray>Installed into the world's datapacks folder", Dialogs.NORMAL, p -> {
+            Query q = new Query("", "downloads", "worldgen", Settings.INSTALLER_COMPATIBLE_ONLY.on(), DATAPACK);
+            LAST.put(p.getUniqueId(), q);
+            runSearch(p, q, 0);
+        }));
         buttons.add(Dialogs.button("<light_purple>⭐ SMP Essentials", "<gray>Voice chat, ViaVersion, ViaBackwards, Chunky...", Dialogs.NORMAL,
                 InstallerMenu::openEssentials));
         buttons.add(Dialogs.button("<#a5b4fc>📦 Installed", "<gray>Plugins installed with SMP Core: update or remove", Dialogs.NORMAL,
@@ -141,7 +153,7 @@ public final class InstallerMenu {
         loading(player, "Searching Modrinth");
         String category = "any".equals(q.category()) ? null : q.category();
         String version = q.compatibleOnly() ? PluginInstaller.gameVersion() : null;
-        installer().client().search(q.text(), q.sort(), category, version, page * PAGE_SIZE, PAGE_SIZE)
+        installer().client().search(q.kind(), q.text(), q.sort(), category, version, page * PAGE_SIZE, PAGE_SIZE)
                 .thenAccept(result -> Dialogs.sync(() -> showResults(player, q, page, result)))
                 .exceptionally(ex -> {
                     failed(player, ex);
@@ -157,7 +169,7 @@ public final class InstallerMenu {
             String label = (installed ? "<green>✔ " : "<white>") + Msg.escape(trim(hit.title(), 26)) + " <gray>⬇" + compact(hit.downloads());
             String tooltip = "<white><b>" + Msg.escape(hit.title()) + "</b></white> <gray>by " + Msg.escape(hit.author()) + "<newline><gray>"
                     + Msg.escape(hit.description()) + "<newline><dark_gray>" + Msg.escape(String.join(", ", hit.categories()));
-            buttons.add(Dialogs.button(label, tooltip, Dialogs.NORMAL, p -> openProject(p, hit.id(), () -> runSearch(p, q, page))));
+            buttons.add(Dialogs.button(label, tooltip, Dialogs.NORMAL, p -> openProject(p, hit.id(), q.kind(), () -> runSearch(p, q, page))));
         }
         if (page > 0) {
             buttons.add(Dialogs.button("<yellow>◀ Previous", null, Dialogs.NORMAL, p -> runSearch(p, q, page - 1)));
@@ -169,17 +181,21 @@ public final class InstallerMenu {
                 ? "<gray>No plugins found. Try another search" + (q.compatibleOnly() ? " or turn off <white>Only plugins for " + PluginInstaller.gameVersion() + "</white>." : ".")
                 : "<gray>" + String.format("%,d", result.total()) + " plugins • page <white>" + (page + 1) + "</white>/" + pages
                 + (q.text().isEmpty() ? "" : " • \"<white>" + Msg.escape(q.text()) + "</white>\"") + " • " + SORTS.getOrDefault(q.sort(), q.sort());
-        Dialogs.show(player, Dialogs.menu("<#67e8f9><b>Modrinth Plugins</b>", List.of(Dialogs.text(header)), List.of(), buttons,
+        Dialogs.show(player, Dialogs.menu(q.kind() == DATAPACK ? "<#86efac><b>Terrain Datapacks</b>" : "<#67e8f9><b>Modrinth Plugins</b>", List.of(Dialogs.text(header)), List.of(), buttons,
                 Dialogs.button("<gray>« Search", null, Dialogs.NORMAL, InstallerMenu::openHome), 2));
     }
 
     // ------------------------------------------------------------------ project page
 
     public static void openProject(Player player, String projectId, Runnable back) {
-        loading(player, "Loading plugin");
+        openProject(player, projectId, PLUGIN, back);
+    }
+
+    public static void openProject(Player player, String projectId, ModrinthClient.Kind kind, Runnable back) {
+        loading(player, "Loading " + (kind == DATAPACK ? "datapack" : "plugin"));
         installer().client().project(projectId)
-                .thenCombine(installer().client().versions(projectId, PluginInstaller.gameVersion()), (project, compatible) -> {
-                    Dialogs.sync(() -> showProject(player, project, compatible, back));
+                .thenCombine(installer().client().versions(kind, projectId, PluginInstaller.gameVersion()), (project, compatible) -> {
+                    Dialogs.sync(() -> showProject(player, project, kind, compatible, back));
                     return null;
                 })
                 .exceptionally(ex -> {
@@ -188,7 +204,8 @@ public final class InstallerMenu {
                 });
     }
 
-    private static void showProject(Player player, ModrinthClient.Project project, List<ModrinthClient.Version> compatible, Runnable back) {
+    private static void showProject(Player player, ModrinthClient.Project project, ModrinthClient.Kind kind, List<ModrinthClient.Version> compatible,
+                                    Runnable back) {
         ModrinthClient.Version best = PluginInstaller.pickBest(compatible);
         PluginInstaller.Installed installed = installer().installed(project.id());
         String status;
@@ -214,23 +231,23 @@ public final class InstallerMenu {
             String verb = installed == null ? "⬇ Install" : best.id().equals(installed.versionId()) ? "⟳ Reinstall" : "⬆ Update";
             buttons.add(Dialogs.button("<green><b>" + verb + "</b> " + Msg.escape(trim(best.number(), 16)),
                     "<gray>Downloads the plugin and its required dependencies", Dialogs.NORMAL,
-                    p -> confirmInstall(p, project, best, () -> showProject(p, project, compatible, back))));
+                    p -> confirmInstall(p, project, kind, best, () -> showProject(p, project, kind, compatible, back))));
         }
         buttons.add(Dialogs.button("<aqua>☰ All Versions", "<gray>Pick a specific version", Dialogs.NORMAL,
-                p -> openVersions(p, project, () -> showProject(p, project, compatible, back))));
+                p -> openVersions(p, project, kind, () -> showProject(p, project, kind, compatible, back))));
         if (installed != null) {
             buttons.add(Dialogs.button("<red>🗑 Uninstall", "<gray>Disable and delete this plugin", Dialogs.NORMAL,
-                    p -> confirmUninstall(p, installed, () -> showProject(p, project, compatible, back))));
+                    p -> confirmUninstall(p, installed, () -> showProject(p, project, kind, compatible, back))));
         }
         buttons.add(Dialogs.link("<#93c5fd>🌐 Modrinth Page", "<gray>Open in your browser", Dialogs.NORMAL,
-                "https://modrinth.com/plugin/" + (project.slug().isEmpty() ? project.id() : project.slug())));
+                "https://modrinth.com/" + (kind == DATAPACK ? "datapack/" : "plugin/") + (project.slug().isEmpty() ? project.id() : project.slug())));
         Dialogs.show(player, Dialogs.menu("<#67e8f9><b>" + Msg.escape(trim(project.title(), 32)) + "</b>", body, List.of(), buttons,
                 Dialogs.button("<gray>« Back", null, Dialogs.NORMAL, p -> back.run()), 2));
     }
 
-    private static void openVersions(Player player, ModrinthClient.Project project, Runnable back) {
+    private static void openVersions(Player player, ModrinthClient.Project project, ModrinthClient.Kind kind, Runnable back) {
         loading(player, "Loading versions");
-        installer().client().versions(project.id(), null).thenAccept(all -> Dialogs.sync(() -> {
+        installer().client().versions(kind, project.id(), null).thenAccept(all -> Dialogs.sync(() -> {
             List<ActionButton> buttons = new ArrayList<>();
             String mc = PluginInstaller.gameVersion();
             for (ModrinthClient.Version v : all.subList(0, Math.min(20, all.size()))) {
@@ -242,7 +259,7 @@ public final class InstallerMenu {
                 buttons.add(Dialogs.button(color + Msg.escape(trim(v.number(), 20)) + type,
                         "<white>" + Msg.escape(v.name()) + "<newline><gray>MC " + Msg.escape(range) + "<newline><gray>Loaders: "
                                 + Msg.escape(String.join(", ", v.loaders())) + (fits ? "" : "<newline><red>Not marked for " + mc),
-                        Dialogs.NORMAL, p -> confirmInstall(p, project, v, () -> openVersions(p, project, back))));
+                        Dialogs.NORMAL, p -> confirmInstall(p, project, kind, v, () -> openVersions(p, project, kind, back))));
             }
             if (buttons.isEmpty()) {
                 Dialogs.message(player, "<red>No versions", "<gray>This project has no server plugin files.", back);
@@ -259,7 +276,8 @@ public final class InstallerMenu {
 
     // ------------------------------------------------------------------ install / uninstall
 
-    private static void confirmInstall(Player player, ModrinthClient.Project project, ModrinthClient.Version version, Runnable back) {
+    private static void confirmInstall(Player player, ModrinthClient.Project project, ModrinthClient.Kind kind, ModrinthClient.Version version,
+                                       Runnable back) {
         long required = version.dependencies().stream().filter(d -> "required".equals(d.type())).count();
         ModrinthClient.FileInfo file = version.primaryFile();
         String text = "<gray>Install <white>" + Msg.escape(project.title()) + " " + Msg.escape(version.number()) + "</white>?<newline>"
@@ -267,25 +285,28 @@ public final class InstallerMenu {
                 + (file == null ? "" : " <dark_gray>(" + (file.size() / 1024) + " KB)") + "<newline>"
                 + (required > 0 ? "<yellow>" + required + " required dependenc" + (required == 1 ? "y" : "ies") + " will be installed too.<newline>" : "")
                 + (version.gameVersions().contains(PluginInstaller.gameVersion()) ? "" : "<red>⚠ This version isn't marked for " + PluginInstaller.gameVersion() + ".<newline>")
-                + "<dark_gray>Only install plugins you trust.";
+                + (kind == DATAPACK ? "<yellow>Datapacks load after a restart. New terrain only appears in chunks that haven't been generated yet.<newline>" : "")
+                + "<dark_gray>Only install " + (kind == DATAPACK ? "datapacks" : "plugins") + " you trust.";
         Dialogs.show(player, Dialogs.confirm("<green><b>Install Plugin?", text,
-                Dialogs.button("<green><b>Install", null, Dialogs.SMALL, p -> doInstall(p, project, version, back)),
+                Dialogs.button("<green><b>Install", null, Dialogs.SMALL, p -> doInstall(p, project, kind, version, back)),
                 Dialogs.button("<gray>Cancel", null, Dialogs.SMALL, p -> back.run())));
     }
 
-    private static void doInstall(Player player, ModrinthClient.Project project, ModrinthClient.Version version, Runnable back) {
+    private static void doInstall(Player player, ModrinthClient.Project project, ModrinthClient.Kind kind, ModrinthClient.Version version,
+                                  Runnable back) {
         Msg.send(player, "<#67e8f9>Installing " + Msg.escape(project.title()) + "...");
         SmpCore.get().getLogger().info(player.getName() + " is installing " + project.title() + " " + version.number() + " from Modrinth");
-        installer().install(project.id(), project.title(), version.id(), step -> Dialogs.sync(() -> Msg.actionBar(player, "<#67e8f9>⏳ " + Msg.escape(step))))
+        installer().install(kind, project.id(), project.title(), version.id(), step -> Dialogs.sync(() -> Msg.actionBar(player, "<#67e8f9>⏳ " + Msg.escape(step))))
                 .thenAccept(result -> Dialogs.sync(() -> {
                     StringBuilder b = new StringBuilder();
                     for (String s : result.installed()) b.append("<green>✔ ").append(Msg.escape(s)).append("<newline>");
                     for (String s : result.skipped()) b.append("<gray>• ").append(Msg.escape(s)).append("<newline>");
                     for (String s : result.failed()) b.append("<red>✖ ").append(Msg.escape(s)).append("<newline>");
-                    b.append("<newline><yellow>Restart the server to start new plugins.</yellow>");
+                    b.append(kind == DATAPACK ? "<newline><yellow>Restart the server to load the datapack.</yellow>"
+                            : "<newline><yellow>Restart the server to start new plugins.</yellow>");
                     List<ActionButton> buttons = new ArrayList<>();
                     PluginInstaller.Installed rec = installer().installed(project.id());
-                    if (rec != null && result.failed().isEmpty()) {
+                    if (rec != null && result.failed().isEmpty() && kind == PLUGIN) {
                         buttons.add(Dialogs.button("<gold>⚡ Load Now (experimental)", "<gray>Try to start it without a restart.<newline>"
                                 + "<red>Some plugins only work after a restart.", Dialogs.NORMAL, p -> {
                             String err = installer().loadNow(rec.file());
@@ -322,7 +343,7 @@ public final class InstallerMenu {
         for (PluginInstaller.Installed i : list) {
             buttons.add(Dialogs.button("<white>" + Msg.escape(trim(i.title(), 24)) + " <gray>" + Msg.escape(trim(i.versionNumber(), 12)),
                     "<gray>" + Msg.escape(i.file()) + "<newline><dark_gray>Click for update / uninstall", Dialogs.NORMAL,
-                    p -> openProject(p, i.projectId(), () -> openInstalled(p))));
+                    p -> openProject(p, i.projectId(), i.kind(), () -> openInstalled(p))));
         }
         if (!list.isEmpty()) {
             buttons.add(Dialogs.button("<yellow>⬆ Check For Updates", "<gray>Compare every installed plugin with Modrinth", Dialogs.NORMAL,
@@ -338,10 +359,10 @@ public final class InstallerMenu {
         List<PluginInstaller.Installed> list = installer().installed();
         List<java.util.concurrent.CompletableFuture<String>> checks = new ArrayList<>();
         for (PluginInstaller.Installed i : list) {
-            checks.add(installer().client().versions(i.projectId(), PluginInstaller.gameVersion()).thenApply(vs -> {
+            checks.add(installer().client().versions(i.kind(), i.projectId(), PluginInstaller.gameVersion()).thenApply(vs -> {
                 ModrinthClient.Version best = PluginInstaller.pickBest(vs);
                 if (best == null || best.id().equals(i.versionId())) return null;
-                return i.projectId() + "|" + i.title() + "|" + i.versionNumber() + "|" + best.number();
+                return i.projectId() + "|" + i.title() + "|" + i.versionNumber() + "|" + best.number() + "|" + i.kind().name();
             }).exceptionally(ex -> null));
         }
         java.util.concurrent.CompletableFuture.allOf(checks.toArray(new java.util.concurrent.CompletableFuture[0])).thenRun(() -> Dialogs.sync(() -> {
@@ -349,9 +370,10 @@ public final class InstallerMenu {
             for (var f : checks) {
                 String r = f.join();
                 if (r == null) continue;
-                String[] parts = r.split("\\|", 4);
+                String[] parts = r.split("\\|", 5);
+                ModrinthClient.Kind kind = ModrinthClient.Kind.valueOf(parts[4]);
                 buttons.add(Dialogs.button("<yellow>⬆ " + Msg.escape(trim(parts[1], 20)), "<gray>" + Msg.escape(parts[2]) + " → <green>" + Msg.escape(parts[3]),
-                        Dialogs.NORMAL, p -> openProject(p, parts[0], () -> openInstalled(p))));
+                        Dialogs.NORMAL, p -> openProject(p, parts[0], kind, () -> openInstalled(p))));
             }
             Dialogs.show(player, Dialogs.menu("<yellow><b>Updates</b>", List.of(Dialogs.text(buttons.isEmpty()
                             ? "<green>Everything is up to date!" : "<gray>" + buttons.size() + " update(s) available. Click one to update.")),

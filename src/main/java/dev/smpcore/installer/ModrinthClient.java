@@ -32,6 +32,21 @@ public final class ModrinthClient {
     public static final String API = "https://api.modrinth.com/v2";
     public static final List<String> SERVER_LOADERS = List.of("paper", "spigot", "bukkit", "purpur", "folia");
 
+    /** What is being browsed: server plugins or world datapacks (custom terrain). */
+    public enum Kind {
+        PLUGIN(SERVER_LOADERS), DATAPACK(List.of("datapack"));
+
+        private final List<String> loaders;
+
+        Kind(List<String> loaders) {
+            this.loaders = loaders;
+        }
+
+        public List<String> loaders() {
+            return loaders;
+        }
+    }
+
     private final HttpClient http = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .followRedirects(HttpClient.Redirect.NORMAL)
@@ -100,10 +115,15 @@ public final class ModrinthClient {
      * @param gameVersion only show plugins supporting this version, or null for all
      */
     public CompletableFuture<SearchResult> search(String query, String sort, String category, String gameVersion, int offset, int limit) {
+        return search(Kind.PLUGIN, query, sort, category, gameVersion, offset, limit);
+    }
+
+    public CompletableFuture<SearchResult> search(Kind kind, String query, String sort, String category, String gameVersion, int offset, int limit) {
+        List<String> loaderList = kind.loaders();
         StringBuilder facets = new StringBuilder("[[");
-        for (int i = 0; i < SERVER_LOADERS.size(); i++) {
+        for (int i = 0; i < loaderList.size(); i++) {
             if (i > 0) facets.append(',');
-            facets.append("\"categories:").append(SERVER_LOADERS.get(i)).append('"');
+            facets.append("\"categories:").append(loaderList.get(i)).append('"');
         }
         facets.append(']');
         if (category != null && !category.isEmpty()) {
@@ -146,10 +166,15 @@ public final class ModrinthClient {
 
     /** Versions of a project that run on server loaders, newest first. */
     public CompletableFuture<List<Version>> versions(String projectId, String gameVersion) {
+        return versions(Kind.PLUGIN, projectId, gameVersion);
+    }
+
+    public CompletableFuture<List<Version>> versions(Kind kind, String projectId, String gameVersion) {
+        List<String> loaderList = kind.loaders();
         StringBuilder loaders = new StringBuilder("[");
-        for (int i = 0; i < SERVER_LOADERS.size(); i++) {
+        for (int i = 0; i < loaderList.size(); i++) {
             if (i > 0) loaders.append(',');
-            loaders.append('"').append(SERVER_LOADERS.get(i)).append('"');
+            loaders.append('"').append(loaderList.get(i)).append('"');
         }
         loaders.append(']');
         String url = API + "/project/" + enc(projectId) + "/version?loaders=" + enc(loaders.toString())
